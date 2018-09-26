@@ -12,3 +12,15 @@ C:\Users\Alex\source\repos\SpriteConverter\SpriteConverter\bin\Debug\Google.Prot
 C:\Users\Alex\source\repos\SpriteConverter\SpriteConverter\bin\Debug\MySql.Data.dll
 C:\Users\Alex\source\repos\SpriteConverter\SpriteConverter\bin\Debug\Google.Protobuf.xml
 C:\Users\Alex\source\repos\SpriteConverter\SpriteConverter\bin\Debug\MySql.Data.xml
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\SpriteConverter.exe.config
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\SpriteConverter.exe
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\SpriteConverter.pdb
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\Google.Protobuf.dll
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\MySql.Data.dll
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\MySql.Data.xml
+C:\Users\Alex\Documents\GitHub\SpriteConverter\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Alex\Documents\GitHub\SpriteConverter\obj\Debug\SpriteConverter.csprojAssemblyReference.cache
+C:\Users\Alex\Documents\GitHub\SpriteConverter\obj\Debug\SpriteConverter.csproj.CoreCompileInputs.cache
+C:\Users\Alex\Documents\GitHub\SpriteConverter\obj\Debug\SpriteConverter.csproj.CopyComplete
+C:\Users\Alex\Documents\GitHub\SpriteConverter\obj\Debug\SpriteConverter.exe
+C:\Users\Alex\Documents\GitHub\SpriteConverter\obj\Debug\SpriteConverter.pdb
