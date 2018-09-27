@@ -93,7 +93,7 @@ namespace SpriteConverter
             MySqlConnection sqlConnection = new MySqlConnection(pCSB.ToString());
             sqlConnection.Open();
 
-            MySqlCommand command;
+           /*MySqlCommand command;
             
             command = new MySqlCommand("DELETE FROM items_definitions", sqlConnection);
             command.ExecuteNonQuery();
@@ -127,14 +127,22 @@ namespace SpriteConverter
                         catalogueItems[pageId].Add(new CatalogueItem(row["sprite"].ToString(), definitionId));
                     }
                 }
-            }
+            }*/
 
             foreach (FurniItem item in itemList)
             {
-                UpdateRows(item);
+                using (MySqlConnection conn = new MySqlConnection(pCSB.ToString()))
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
+                    cmd.Parameters.AddWithValue("@sprite", item.FileName);
+                    cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
+                    cmd.ExecuteNonQuery();
+                }
+                //UpdateRows(item);
             }
 
-            foreach (var kvp in catalogueItems)
+            /*foreach (var kvp in catalogueItems)
             {
                 int pageId = kvp.Key;
                 List<CatalogueItem> catalogueItem = kvp.Value;
@@ -169,7 +177,7 @@ namespace SpriteConverter
 
                     }
                 }
-            }
+            }*/
 
             sqlConnection.Close();
 
