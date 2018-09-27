@@ -131,13 +131,16 @@ namespace SpriteConverter
 
             foreach (FurniItem item in itemList)
             {
-                using (MySqlConnection conn = new MySqlConnection(pCSB.ToString()))
+                if (item.FileName.StartsWith("carpet_soft*9"))
                 {
-                    conn.Open();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
-                    cmd.Parameters.AddWithValue("@sprite", item.FileName);
-                    cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
-                    cmd.ExecuteNonQuery();
+                    using (MySqlConnection conn = new MySqlConnection(pCSB.ToString()))
+                    {
+                        conn.Open();
+                        MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
+                        cmd.Parameters.AddWithValue("@sprite", item.FileName);
+                        cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
+                        cmd.ExecuteNonQuery();
+                    }
                 }
                 //UpdateRows(item);
             }
