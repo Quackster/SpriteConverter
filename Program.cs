@@ -131,8 +131,6 @@ namespace SpriteConverter
 
             foreach (FurniItem item in itemList)
             {
-                if (item.FileName.StartsWith("carpet_soft*9"))
-                {
                     using (MySqlConnection conn = new MySqlConnection(pCSB.ToString()))
                     {
                         conn.Open();
@@ -141,7 +139,6 @@ namespace SpriteConverter
                         cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
                         cmd.ExecuteNonQuery();
                     }
-                }
                 //UpdateRows(item);
             }
 
