@@ -39,7 +39,7 @@ namespace SpriteConverter
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("ERROR parsing length and width: " + this.FileName);
+
                 }
 
                 this.Colour = data[7];
@@ -60,11 +60,16 @@ namespace SpriteConverter
             }
         }
 
-        private static MySqlConnectionStringBuilder pCSB;
+        private static MySqlConnectionStringBuilder holoDbString;
+        private static MySqlConnectionStringBuilder keplerDbString;
+
+        private static Dictionary<String, int> maxInteractions;
         private static Dictionary<int, List<CatalogueItem>> catalogueItems;
 
         static void Main(string[] args)
         {
+            maxInteractions = new Dictionary<string, int>();
+
             Console.WriteLine("Converter for furnidata.txt");
 
             string fileContents = File.ReadAllText("furnidata.txt");
@@ -76,70 +81,111 @@ namespace SpriteConverter
             foreach (var stringArray in furnidataList)
                 itemList.Add(new FurniItem(stringArray));
 
-            pCSB = new MySqlConnectionStringBuilder();
+            holoDbString = new MySqlConnectionStringBuilder();
+            holoDbString.Server = "localhost";
+            holoDbString.Port = 3306;
+            holoDbString.UserID = "kepler";
+            holoDbString.Password = "verysecret";
+            holoDbString.Database = "holodb";
+            holoDbString.MinimumPoolSize = 5;
+            holoDbString.MaximumPoolSize = 10;
+            holoDbString.SslMode = MySqlSslMode.None;
 
-            // Server
-            pCSB.Server = "localhost";
-            pCSB.Port = 3306;
-            pCSB.UserID = "kepler";
-            pCSB.Password = "verysecret";
+            keplerDbString = new MySqlConnectionStringBuilder();
+            keplerDbString.Server = "localhost";
+            keplerDbString.Port = 3306;
+            keplerDbString.UserID = "kepler";
+            keplerDbString.Password = "verysecret";
+            keplerDbString.Database = "dev";
+            keplerDbString.MinimumPoolSize = 5;
+            keplerDbString.MaximumPoolSize = 10;
+            keplerDbString.SslMode = MySqlSslMode.None;
 
-            // Database
-            pCSB.Database = "dev";
-            pCSB.MinimumPoolSize = 5;
-            pCSB.MaximumPoolSize = 10;
-            pCSB.SslMode = MySqlSslMode.None;
+            using (MySqlConnection connection = new MySqlConnection(holoDbString.ToString()))
+            {
+                connection.Open();
 
-            MySqlConnection sqlConnection = new MySqlConnection(pCSB.ToString());
+                var cmd = new MySqlCommand("SELECT * FROM catalogue_items", connection);
+                cmd.CommandType = CommandType.Text;
+
+                var row = cmd.ExecuteReader();
+
+                while (row.Read())
+                {
+                    string nameCct = row["name_cct"].ToString();
+                    int maxStatus = Convert.ToInt32(row["status_max"].ToString());
+
+                    if (maxInteractions.ContainsKey(nameCct))
+                    {
+                        Console.WriteLine(nameCct + " / " + maxStatus);
+                        continue;
+                    }
+
+                    maxInteractions.Add(nameCct, maxStatus);
+                }
+            }
+
+            foreach (var kvp in maxInteractions)
+            {
+                using (MySqlConnection conn = new MySqlConnection(keplerDbString.ToString()))
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET max_status = @status_max WHERE sprite = @sprite", conn);
+                    cmd.Parameters.AddWithValue("@status_max", kvp.Value);
+                    cmd.Parameters.AddWithValue("@sprite", kvp.Key);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            MySqlConnection sqlConnection = new MySqlConnection(keplerDbString.ToString());
             sqlConnection.Open();
 
-           /*MySqlCommand command;
-            
-            command = new MySqlCommand("DELETE FROM items_definitions", sqlConnection);
-            command.ExecuteNonQuery();
+            /*MySqlCommand command;
 
-            command = new MySqlCommand("SELECT * FROM catalogue_items", sqlConnection);
-            var reader = command.ExecuteReader();
+             command = new MySqlCommand("DELETE FROM items_definitions", sqlConnection);
+             command.ExecuteNonQuery();
 
-            while (reader.Read())
-            {
-                int id = (int)reader["id"];
-                int pageId = (int)reader["page_id"];
-                int definitionId = (int)reader["definition_id"];
+             command = new MySqlCommand("SELECT * FROM catalogue_items", sqlConnection);
+             var reader = command.ExecuteReader();
 
-                using (MySqlConnection connection = new MySqlConnection(pCSB.ToString()))
-                {
-                    connection.Open();
+             while (reader.Read())
+             {
+                 int id = (int)reader["id"];
+                 int pageId = (int)reader["page_id"];
+                 int definitionId = (int)reader["definition_id"];
 
-                    var cmd = new MySqlCommand("SELECT * FROM items_definitions2 WHERE id = @definition_id;", connection);
-                    cmd.Parameters.AddWithValue("@definition_id", definitionId);
-                    cmd.CommandType = CommandType.Text;
+                 using (MySqlConnection connection = new MySqlConnection(pCSB.ToString()))
+                 {
+                     connection.Open();
 
-                    var row = cmd.ExecuteReader();
+                     var cmd = new MySqlCommand("SELECT * FROM items_definitions2 WHERE id = @definition_id;", connection);
+                     cmd.Parameters.AddWithValue("@definition_id", definitionId);
+                     cmd.CommandType = CommandType.Text;
 
-                    if (row.Read())
-                    {
-                        if (!catalogueItems.ContainsKey(pageId))
-                        {
-                            catalogueItems.Add(pageId, new List<CatalogueItem>());
-                        }
+                     var row = cmd.ExecuteReader();
 
-                        catalogueItems[pageId].Add(new CatalogueItem(row["sprite"].ToString(), definitionId));
-                    }
-                }
-            }*/
+                     if (row.Read())
+                     {
+                         if (!catalogueItems.ContainsKey(pageId))
+                         {
+                             catalogueItems.Add(pageId, new List<CatalogueItem>());
+                         }
+
+                         catalogueItems[pageId].Add(new CatalogueItem(row["sprite"].ToString(), definitionId));
+                     }
+                 }
+             }*/
 
             foreach (FurniItem item in itemList)
             {
-                    using (MySqlConnection conn = new MySqlConnection(pCSB.ToString()))
-                    {
-                        conn.Open();
-                        MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
-                        cmd.Parameters.AddWithValue("@sprite", item.FileName);
-                        cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
-                        cmd.ExecuteNonQuery();
-                    }
-                //UpdateRows(item);
+                using (MySqlConnection conn = new MySqlConnection(keplerDbString.ToString()))
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
+                    cmd.Parameters.AddWithValue("@sprite", item.FileName);
+                    cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
+                    //cmd.ExecuteNonQuery();
+                }
             }
 
             /*foreach (var kvp in catalogueItems)
@@ -185,7 +231,7 @@ namespace SpriteConverter
             Console.Read();
         }
 
-        private static void UpdateRows(FurniItem item)
+        /*private static void UpdateRows(FurniItem item)
         {
             if (item.FileName.Length == 0)
             {
@@ -228,6 +274,6 @@ namespace SpriteConverter
                     }
                 }
             }
-        }
+        }*/
     }
 }
