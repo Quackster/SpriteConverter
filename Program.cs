@@ -277,3 +277,150 @@ namespace SpriteConverter
         }*/
     }
 }
+
+/*using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SpriteConverter
+{
+    class Program
+    {
+        class FurniItem
+        {
+            public string Type;
+            public string SpriteId;
+            public string FileName;
+            public string Revision;
+            public string Unknown;
+            public int Length;
+            public int Width;
+            public string Colour;
+            public string Name;
+            public string Description;
+
+            public FurniItem(string[] data)
+            {
+                this.Type = data[0];
+                this.SpriteId = data[1];
+                this.FileName = data[2];
+                this.Revision = data[3];
+                this.Unknown = data[4];
+                try
+                {
+                    this.Length = Convert.ToInt32(data[5]);
+                    this.Width = Convert.ToInt32(data[6]);
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                this.Colour = data[7];
+                this.Name = data[8];
+                this.Description = data[9];
+            }
+        }
+
+        class CatalogueItem
+        {
+            public string FileName;
+            public int ItemId;
+
+            public CatalogueItem(string fileName, int itemId)
+            {
+                FileName = fileName;
+                ItemId = itemId;
+            }
+        }
+
+        private static MySqlConnectionStringBuilder holoDbString;
+        private static MySqlConnectionStringBuilder keplerDbString;
+
+        private static Dictionary<String, string> vendingItems;
+        private static Dictionary<int, List<CatalogueItem>> catalogueItems;
+
+        static void Main(string[] args)
+        {
+            vendingItems = new Dictionary<string, string>();
+
+            Console.WriteLine("Converter for furnidata.txt");
+
+            string fileContents = File.ReadAllText("furnidata.txt");
+            var furnidataList = JsonConvert.DeserializeObject<List<string[]>>(fileContents);
+
+            List<FurniItem> itemList = new List<FurniItem>();
+            catalogueItems = new Dictionary<int, List<CatalogueItem>>();
+
+            foreach (var stringArray in furnidataList)
+                itemList.Add(new FurniItem(stringArray));
+
+            holoDbString = new MySqlConnectionStringBuilder();
+            holoDbString.Server = "localhost";
+            holoDbString.Port = 3306;
+            holoDbString.UserID = "kepler";
+            holoDbString.Password = "verysecret";
+            holoDbString.Database = "v33";
+            holoDbString.MinimumPoolSize = 5;
+            holoDbString.MaximumPoolSize = 10;
+            holoDbString.SslMode = MySqlSslMode.None;
+
+            keplerDbString = new MySqlConnectionStringBuilder();
+            keplerDbString.Server = "localhost";
+            keplerDbString.Port = 3306;
+            keplerDbString.UserID = "kepler";
+            keplerDbString.Password = "verysecret";
+            keplerDbString.Database = "dev";
+            keplerDbString.MinimumPoolSize = 5;
+            keplerDbString.MaximumPoolSize = 10;
+            keplerDbString.SslMode = MySqlSslMode.None;
+
+            using (MySqlConnection connection = new MySqlConnection(holoDbString.ToString()))
+            {
+                connection.Open();
+
+                var cmd = new MySqlCommand("SELECT * FROM catalogue_items", connection);
+                cmd.CommandType = CommandType.Text;
+
+                var row = cmd.ExecuteReader();
+
+                while (row.Read())
+                {
+                    string nameCct = row["name_cct"].ToString();
+                    string drinkIds = row["drink_ids"].ToString();
+
+                    if (vendingItems.ContainsKey(nameCct) || drinkIds == null || drinkIds.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    vendingItems.Add(nameCct, drinkIds);
+                }
+            }
+
+            foreach (var kvp in vendingItems)
+            {
+                using (MySqlConnection conn = new MySqlConnection(keplerDbString.ToString()))
+                {
+                    Console.WriteLine(kvp.Value.Replace("\r\n", ","));
+
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET drink_ids = @drink_ids, interactor = 'vending_machine' WHERE sprite = @sprite", conn);
+                    cmd.Parameters.AddWithValue("@drink_ids", kvp.Value.Replace("\r\n", ","));
+                    cmd.Parameters.AddWithValue("@sprite", kvp.Key);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            Console.WriteLine("Finished");
+            Console.Read();
+        }
+    }
+}
+*/
