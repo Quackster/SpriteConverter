@@ -101,7 +101,7 @@ namespace SpriteConverter
             keplerDbString.MaximumPoolSize = 10;
             keplerDbString.SslMode = MySqlSslMode.None;
 
-            using (MySqlConnection connection = new MySqlConnection(holoDbString.ToString()))
+            /*using (MySqlConnection connection = new MySqlConnection(holoDbString.ToString()))
             {
                 connection.Open();
 
@@ -135,7 +135,7 @@ namespace SpriteConverter
                     cmd.Parameters.AddWithValue("@sprite", kvp.Key);
                     cmd.ExecuteNonQuery();
                 }
-            }
+            }*/
 
             MySqlConnection sqlConnection = new MySqlConnection(keplerDbString.ToString());
             sqlConnection.Open();
@@ -184,7 +184,7 @@ namespace SpriteConverter
                     MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
                     cmd.Parameters.AddWithValue("@sprite", item.FileName);
                     cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
-                    //cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                 }
             }
 
@@ -228,7 +228,7 @@ namespace SpriteConverter
             sqlConnection.Close();
 
             Console.WriteLine("Finished");
-            Console.Read();
+//            Console.Read();
         }
 
         /*private static void UpdateRows(FurniItem item)
