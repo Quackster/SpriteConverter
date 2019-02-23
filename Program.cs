@@ -94,8 +94,8 @@ namespace SpriteConverter
             keplerDbString = new MySqlConnectionStringBuilder();
             keplerDbString.Server = "localhost";
             keplerDbString.Port = 3306;
-            keplerDbString.UserID = "kepler";
-            keplerDbString.Password = "verysecret";
+            keplerDbString.UserID = "root";
+            keplerDbString.Password = "123";
             keplerDbString.Database = "dev";
             keplerDbString.MinimumPoolSize = 5;
             keplerDbString.MaximumPoolSize = 10;
