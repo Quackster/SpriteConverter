@@ -181,9 +181,11 @@ namespace SpriteConverter
                 using (MySqlConnection conn = new MySqlConnection(keplerDbString.ToString()))
                 {
                     conn.Open();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id WHERE sprite = @sprite", conn);
+                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id, name = @name, description = @description WHERE sprite = @sprite", conn);
                     cmd.Parameters.AddWithValue("@sprite", item.FileName);
                     cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
+                    cmd.Parameters.AddWithValue("@name", item.Name);
+                    cmd.Parameters.AddWithValue("@description", item.Description);
                     cmd.ExecuteNonQuery();
                 }
             }
