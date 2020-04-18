@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace SpriteConverter
 {
@@ -24,6 +25,10 @@ namespace SpriteConverter
             public string Colour;
             public string Name;
             public string Description;
+
+            public FurniItem()
+            {
+            }
 
             public FurniItem(string[] data)
             {
@@ -65,6 +70,7 @@ namespace SpriteConverter
 
         private static Dictionary<String, int> maxInteractions;
         private static Dictionary<int, List<CatalogueItem>> catalogueItems;
+        private static List<FurniItem> ItemList = new List<FurniItem>();
 
         static void Main(string[] args)
         {
@@ -72,14 +78,26 @@ namespace SpriteConverter
 
             Console.WriteLine("Converter for furnidata.txt");
 
-            string fileContents = File.ReadAllText("furnidata.txt");
-            var furnidataList = JsonConvert.DeserializeObject<List<string[]>>(fileContents);
 
-            List<FurniItem> itemList = new List<FurniItem>();
-            catalogueItems = new Dictionary<int, List<CatalogueItem>>();
-              
-            foreach (var stringArray in furnidataList)
-                itemList.Add(new FurniItem(stringArray));
+
+            string furnidataPath = "furnidata2.xml";
+            var furnidataExtension = Path.GetExtension(furnidataPath);
+
+            if (furnidataExtension == ".xml")
+            {
+                ParseFurnidataXML(furnidataPath);
+            }
+            else
+            {
+                var officialFileContents = File.ReadAllText(furnidataPath);
+                officialFileContents = officialFileContents.Replace("]]\n[[", "],[");
+                var officialFurnidataList = JsonConvert.DeserializeObject<List<string[]>>(officialFileContents);
+
+                foreach (var stringArray in officialFurnidataList)
+                {
+                    ItemList.Add(new FurniItem(stringArray));
+                }
+            }
 
             holoDbString = new MySqlConnectionStringBuilder();
             holoDbString.Server = "localhost";
@@ -96,7 +114,7 @@ namespace SpriteConverter
             keplerDbString.Port = 3306;
             keplerDbString.UserID = "root";
             keplerDbString.Password = "123";
-            keplerDbString.Database = "dev";
+            keplerDbString.Database = "kurkku";
             keplerDbString.MinimumPoolSize = 5;
             keplerDbString.MaximumPoolSize = 10;
             keplerDbString.SslMode = MySqlSslMode.None;
@@ -176,12 +194,12 @@ namespace SpriteConverter
                  }
              }*/
 
-            foreach (FurniItem item in itemList)
+            foreach (FurniItem item in ItemList)
             {
                 using (MySqlConnection conn = new MySqlConnection(keplerDbString.ToString()))
                 {
                     conn.Open();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE items_definitions SET sprite_id = @sprite_id, name = @name, description = @description WHERE sprite = @sprite", conn);
+                    MySqlCommand cmd = new MySqlCommand("UPDATE item_definitions SET sprite_id = @sprite_id, name = @name, description = @description WHERE sprite = @sprite", conn);
                     cmd.Parameters.AddWithValue("@sprite", item.FileName);
                     cmd.Parameters.AddWithValue("@sprite_id", item.SpriteId);
                     cmd.Parameters.AddWithValue("@name", item.Name);
@@ -231,6 +249,64 @@ namespace SpriteConverter
 
             Console.WriteLine("Finished");
 //            Console.Read();
+        }
+
+        private static void ParseFurnidataXML(string furnidataPath)
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(furnidataPath);
+
+            var floorTypes = xmlDoc.SelectNodes("//furnidata/roomitemtypes/furnitype");
+            var floorItems = floorTypes.Count;
+
+            for (int i = 0; i < floorItems; i++)
+            {
+                var itemNode = floorTypes.Item(i);
+
+                if (itemNode.Attributes.GetNamedItem("classname") == null)
+                    continue;
+
+                var className = itemNode.Attributes.GetNamedItem("classname").InnerText;
+
+                var length = itemNode.ChildNodes.Item(2).InnerText;
+                var width = itemNode.ChildNodes.Item(3).InnerText;
+                var name = itemNode.ChildNodes.Item(5).InnerText;
+                var description = itemNode.ChildNodes.Item(6).InnerText;
+
+                FurniItem furniItem = new FurniItem();
+                furniItem.Length = int.Parse(length);
+                furniItem.Width = int.Parse(width);
+                furniItem.Width = int.Parse(width);
+                furniItem.Type = "S";
+                furniItem.SpriteId = itemNode.Attributes.GetNamedItem("id").InnerText;
+                furniItem.FileName = className;
+                furniItem.Name = name;
+                furniItem.Description = description;
+                ItemList.Add(furniItem);
+            }
+
+            var wallTypes = xmlDoc.SelectNodes("//furnidata/wallitemtypes/furnitype");
+            var wallItems = wallTypes.Count;
+
+            for (int i = 0; i < wallItems; i++)
+            {
+                var itemNode = wallTypes.Item(i);
+
+                if (itemNode.Attributes.GetNamedItem("classname") == null)
+                    continue;
+
+                var className = itemNode.Attributes.GetNamedItem("classname").InnerText;
+                var name = itemNode.ChildNodes.Item(5).InnerText;
+                var description = itemNode.ChildNodes.Item(6).InnerText;
+
+                FurniItem furniItem = new FurniItem();
+                furniItem.Type = "I";
+                furniItem.FileName = className;
+                furniItem.SpriteId = itemNode.Attributes.GetNamedItem("id").InnerText;
+                furniItem.Name = name;
+                furniItem.Description = description;
+                ItemList.Add(furniItem);
+            }
         }
 
         /*private static void UpdateRows(FurniItem item)
